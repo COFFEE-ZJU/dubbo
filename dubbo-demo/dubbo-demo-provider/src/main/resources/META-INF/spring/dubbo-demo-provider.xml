@@ -21,7 +21,8 @@
 	http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 	
 	<bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl" />
-	
-	<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService" />
+
+	<dubbo:protocol name="dubbo" port="20879" />
+	<dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService" protocol="dubbo" />
 	
 </beans>
