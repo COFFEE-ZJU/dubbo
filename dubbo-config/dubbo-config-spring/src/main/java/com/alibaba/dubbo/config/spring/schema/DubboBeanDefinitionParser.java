@@ -186,7 +186,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                                 if (isPrimitive(type)) {
                                     if ("async".equals(property) && "false".equals(value)
                                             || "timeout".equals(property) && "0".equals(value)
-                                            || "delay".equals(property) && "0".equals(value)
+                                            || "delay".equals(property) && "0".equals(value)    // 兼容旧版本？ delay="0" 跟没配置效果一样, 都被设置为null
                                             || "version".equals(property) && "0.0.0".equals(value)
                                             || "stat".equals(property) && "-1".equals(value)
                                             || "reliable".equals(property) && "false".equals(value)) {
