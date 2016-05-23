@@ -15,9 +15,6 @@
  */
 package com.alibaba.dubbo.rpc.protocol.dubbo;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.Version;
@@ -39,6 +36,9 @@ import com.alibaba.dubbo.remoting.transport.CodecSupport;
 import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.Result;
 import com.alibaba.dubbo.rpc.RpcInvocation;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import static com.alibaba.dubbo.rpc.protocol.dubbo.CallbackServiceCodec.encodeInvocationArgument;
 
@@ -72,9 +72,11 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
         // get request id.
         long id = Bytes.bytes2long(header, 4);
         if ((flag & FLAG_REQUEST) == 0) {
+            // FLAG_REQUEST位为0, 说明是response
             // decode response.
             Response res = new Response(id);
             if ((flag & FLAG_EVENT) != 0) {
+                // FLAG_EVENT 位1表明是心跳信号
                 res.setEvent(Response.HEARTBEAT_EVENT);
             }
             // get status.
@@ -92,6 +94,7 @@ public class DubboCodec extends ExchangeCodec implements Codec2 {
                         if (channel.getUrl().getParameter(
                             Constants.DECODE_IN_IO_THREAD_KEY,
                             Constants.DEFAULT_DECODE_IN_IO_THREAD)) {
+                            // 在当前IO线程就做decode
                             result = new DecodeableRpcResult(channel, res, is,
                                                              (Invocation)getRequestData(id), proto);
                             result.decode();

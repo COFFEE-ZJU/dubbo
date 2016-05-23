@@ -16,8 +16,6 @@
 
 package com.alibaba.dubbo.rpc.protocol.dubbo;
 
-import java.io.IOException;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.remoting.Channel;
 import com.alibaba.dubbo.remoting.Codec2;
@@ -27,6 +25,8 @@ import com.alibaba.dubbo.remoting.exchange.Response;
 import com.alibaba.dubbo.remoting.exchange.support.MultiMessage;
 import com.alibaba.dubbo.rpc.RpcInvocation;
 import com.alibaba.dubbo.rpc.RpcResult;
+
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:gang.lvg@alibaba-inc.com">kimi</a>
@@ -42,12 +42,17 @@ public final class DubboCountCodec implements Codec2 {
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int save = buffer.readerIndex();
         MultiMessage result = MultiMessage.create();
+        // 可能有多条消息一次性到达
         do {
+            // 调用DubboCodec.decode来做解码
             Object obj = codec.decode(channel, buffer);
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
+                // 说明现在这条消息还不完整, 或者已经没有消息了
+                // 那就把readerIndex设置回上一次的位置
                 buffer.readerIndex(save);
                 break;
             } else {
+                // 添加一条解码后的消息
                 result.addMessage(obj);
                 logMessageLength(obj, buffer.readerIndex() - save);
                 save = buffer.readerIndex();

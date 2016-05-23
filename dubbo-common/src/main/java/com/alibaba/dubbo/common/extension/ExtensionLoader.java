@@ -15,23 +15,6 @@
  */
 package com.alibaba.dubbo.common.extension;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.regex.Pattern;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.extension.support.ActivateComparator;
@@ -41,6 +24,15 @@ import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.common.utils.ConfigUtils;
 import com.alibaba.dubbo.common.utils.Holder;
 import com.alibaba.dubbo.common.utils.StringUtils;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Pattern;
 
 /**
  * Dubbo使用的扩展点获取。<p>
@@ -630,6 +622,7 @@ public class ExtensionLoader<T> {
                                                         type + ", class line: " + clazz.getName() + "), class " 
                                                         + clazz.getName() + "is not subtype of interface.");
                                             }
+                                            // 有Adaptive注释, 说明是Adaptive的类, 之后就不需要动态生成一个Adaptive类了
                                             if (clazz.isAnnotationPresent(Adaptive.class)) {
                                                 if(cachedAdaptiveClass == null) {
                                                     cachedAdaptiveClass = clazz;
@@ -640,6 +633,7 @@ public class ExtensionLoader<T> {
                                                 }
                                             } else {
                                                 try {
+                                                    // 有以对应接口为参数的构造器, 说明是包装类Wrapper
                                                     clazz.getConstructor(type);
                                                     Set<Class<?>> wrappers = cachedWrapperClasses;
                                                     if (wrappers == null) {

@@ -15,9 +15,6 @@
  */
 package com.alibaba.dubbo.remoting.exchange.codec;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.alibaba.dubbo.common.io.Bytes;
 import com.alibaba.dubbo.common.io.StreamUtils;
 import com.alibaba.dubbo.common.logger.Logger;
@@ -36,6 +33,9 @@ import com.alibaba.dubbo.remoting.exchange.Response;
 import com.alibaba.dubbo.remoting.exchange.support.DefaultFuture;
 import com.alibaba.dubbo.remoting.telnet.codec.TelnetCodec;
 import com.alibaba.dubbo.remoting.transport.CodecSupport;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * ExchangeCodec.
@@ -91,9 +91,12 @@ public class ExchangeCodec extends TelnetCodec {
         // check magic number.
         if (readable > 0 && header[0] != MAGIC_HIGH 
                 || readable > 1 && header[1] != MAGIC_LOW) {
+            // 有内容但不是MAGIC_NUMBER
             int length = header.length;
             if (header.length < readable) {
+                // 把header扩展到buffer的现有长度
                 header = Bytes.copyOf(header, readable);
+                // 读取剩下的buffer中的内容
                 buffer.readBytes(header, length, readable - length);
             }
             for (int i = 1; i < header.length - 1; i ++) {
@@ -140,14 +143,18 @@ public class ExchangeCodec extends TelnetCodec {
 
     protected Object decodeBody(Channel channel, InputStream is, byte[] header) throws IOException {
         byte flag = header[2], proto = (byte) (flag & SERIALIZATION_MASK);
+        // proto即为serialization id
+        // 根据id获取serialization实例
         Serialization s = CodecSupport.getSerialization(channel.getUrl(), proto);
         ObjectInput in = s.deserialize(channel.getUrl(), is);
         // get request id.
         long id = Bytes.bytes2long(header, 4);
         if ((flag & FLAG_REQUEST) == 0) {
+            // FLAG_REQUEST位为0, 说明是response
             // decode response.
             Response res = new Response(id);
             if ((flag & FLAG_EVENT) != 0) {
+                // FLAG_EVENT 位1表明是心跳信号
                 res.setEvent(Response.HEARTBEAT_EVENT);
             }
             // get status.
@@ -173,11 +180,13 @@ public class ExchangeCodec extends TelnetCodec {
             }
             return res;
         } else {
+            // FLAG_REQUEST位为1, 说明是request
             // decode request.
             Request req = new Request(id);
             req.setVersion("2.0.0");
             req.setTwoWay((flag & FLAG_TWOWAY) != 0);
             if ((flag & FLAG_EVENT) != 0) {
+                // FLAG_EVENT 位1表明是心跳信号
                 req.setEvent(Request.HEARTBEAT_EVENT);
             }
             try {
@@ -185,6 +194,7 @@ public class ExchangeCodec extends TelnetCodec {
                 if (req.isHeartbeat()) {
                     data = decodeHeartbeatData(channel, in);
                 } else if (req.isEvent()) {
+                    // 不清楚这个是什么时候调用到, 代码与decodeHeartbeatData一样
                     data = decodeEventData(channel, in);
                 } else {
                     data = decodeRequestData(channel, in);

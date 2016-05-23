@@ -16,11 +16,6 @@
 
 package com.alibaba.dubbo.rpc.protocol.dubbo;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Type;
-
 import com.alibaba.dubbo.common.logger.Logger;
 import com.alibaba.dubbo.common.logger.LoggerFactory;
 import com.alibaba.dubbo.common.serialize.ObjectInput;
@@ -34,6 +29,11 @@ import com.alibaba.dubbo.remoting.transport.CodecSupport;
 import com.alibaba.dubbo.rpc.Invocation;
 import com.alibaba.dubbo.rpc.RpcResult;
 import com.alibaba.dubbo.rpc.support.RpcUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.Type;
 
 /**
  * @author <a href="mailto:gang.lvg@alibaba-inc.com">kimi</a>
@@ -70,6 +70,7 @@ public class DecodeableRpcResult extends RpcResult implements Codec, Decodeable 
     }
 
     public Object decode(Channel channel, InputStream input) throws IOException {
+        // 根据参数获取Serialization, 默认是hessian2, 然后反序列化一个ObjectInput
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
             .deserialize(channel.getUrl(), input);
 

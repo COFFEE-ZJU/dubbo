@@ -15,11 +15,6 @@
  */
 package com.alibaba.dubbo.registry.integration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.extension.ExtensionLoader;
@@ -32,14 +27,15 @@ import com.alibaba.dubbo.registry.NotifyListener;
 import com.alibaba.dubbo.registry.Registry;
 import com.alibaba.dubbo.registry.RegistryFactory;
 import com.alibaba.dubbo.registry.RegistryService;
-import com.alibaba.dubbo.rpc.Exporter;
-import com.alibaba.dubbo.rpc.Invoker;
-import com.alibaba.dubbo.rpc.Protocol;
-import com.alibaba.dubbo.rpc.ProxyFactory;
-import com.alibaba.dubbo.rpc.RpcException;
+import com.alibaba.dubbo.rpc.*;
 import com.alibaba.dubbo.rpc.cluster.Cluster;
 import com.alibaba.dubbo.rpc.cluster.Configurator;
 import com.alibaba.dubbo.rpc.protocol.InvokerWrapper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RegistryProtocol
@@ -103,7 +99,7 @@ public class RegistryProtocol implements Protocol {
     private final static Logger logger = LoggerFactory.getLogger(RegistryProtocol.class);
     
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        //export invoker
+        //export invoker, 调用真正的暴露服务的protocol的export, 暴露完以后再向Registry注册.
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
         //registry provider
         final Registry registry = getRegistry(originInvoker);
@@ -143,14 +139,21 @@ public class RegistryProtocol implements Protocol {
     
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T>  doLocalExport(final Invoker<T> originInvoker){
+        // 通过这个方法获得Invoker的实际provider url:
+        // dubbo://10.35.34.61:20879/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&loadbalance=roundrobin&methods=sayHello&owner=william&pid=10588&side=provider&timestamp=1464318316441
         String key = getCacheKey(originInvoker);
         ExporterChangeableWrapper<T> exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
+        // 检查是否已经暴露过实际的服务, 有可能会注册到多个Registry,
+        // 那样的话doLocalExport可能会被多次调用, 而实际上只需要暴露一次真正的服务, 所以会缓存起来
         if (exporter == null) {
             synchronized (bounds) {
                 exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
                 if (exporter == null) {
+                    // InvokerDelegete 用于覆盖原先invoker的url, 不然的话又会自动适配到RegistryProtocol里来了.
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
+                    // 调用protocol.export真正暴露服务
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>)protocol.export(invokerDelegete), originInvoker);
+                    // 实际暴露好的服务的export会放到bounds中进行缓存
                     bounds.put(key, exporter);
                 }
             }

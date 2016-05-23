@@ -15,20 +15,6 @@
  */
 package com.alibaba.dubbo.config;
 
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.Version;
@@ -47,6 +33,10 @@ import com.alibaba.dubbo.rpc.ProxyFactory;
 import com.alibaba.dubbo.rpc.cluster.ConfiguratorFactory;
 import com.alibaba.dubbo.rpc.service.GenericService;
 import com.alibaba.dubbo.rpc.support.ProtocolUtils;
+
+import java.lang.reflect.Method;
+import java.net.*;
+import java.util.*;
 
 /**
  * ServiceConfig
@@ -288,6 +278,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
         if (name == null || name.length() == 0) {
+            // 默认使用 dubbo 协议
             name = "dubbo";
         }
 
@@ -483,8 +474,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (logger.isInfoEnabled()) {
                             logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                         }
+                        // 服务端获取本地的Invoker, 使用反射机制将收到的Invocation转到实际的服务实现上
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
 
+                        // 将生成的本地Invoker通过指定的protocal暴露出去
                         Exporter<?> exporter = protocol.export(invoker);
                         exporters.add(exporter);
                     }

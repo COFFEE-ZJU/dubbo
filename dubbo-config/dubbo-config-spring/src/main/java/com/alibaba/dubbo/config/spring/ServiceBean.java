@@ -15,11 +15,9 @@
  */
 package com.alibaba.dubbo.config.spring;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import com.alibaba.dubbo.config.*;
+import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.DisposableBean;
@@ -31,15 +29,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.support.AbstractApplicationContext;
 
-import com.alibaba.dubbo.config.ApplicationConfig;
-import com.alibaba.dubbo.config.ModuleConfig;
-import com.alibaba.dubbo.config.MonitorConfig;
-import com.alibaba.dubbo.config.ProtocolConfig;
-import com.alibaba.dubbo.config.ProviderConfig;
-import com.alibaba.dubbo.config.RegistryConfig;
-import com.alibaba.dubbo.config.ServiceConfig;
-import com.alibaba.dubbo.config.annotation.Service;
-import com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ServiceFactoryBean
@@ -117,6 +110,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
         if (delay == null && provider != null) {
             delay = provider.getDelay();
         }
+        // delay没有配置或者配置了0（会在解析的时候置为null）或-1， 就算作isDelay，否则就返回false
         return supportedApplicationListener && (delay == null || delay.intValue() == -1);
     }
 
