@@ -622,6 +622,7 @@ public class ExtensionLoader<T> {
                                                         type + ", class line: " + clazz.getName() + "), class " 
                                                         + clazz.getName() + "is not subtype of interface.");
                                             }
+                                            // 有Adaptive注释, 说明是Adaptive的类, 之后就不需要动态生成一个Adaptive类了
                                             if (clazz.isAnnotationPresent(Adaptive.class)) {
                                                 if(cachedAdaptiveClass == null) {
                                                     cachedAdaptiveClass = clazz;
@@ -632,6 +633,7 @@ public class ExtensionLoader<T> {
                                                 }
                                             } else {
                                                 try {
+                                                    // 有以对应接口为参数的构造器, 说明是包装类Wrapper
                                                     clazz.getConstructor(type);
                                                     Set<Class<?>> wrappers = cachedWrapperClasses;
                                                     if (wrappers == null) {

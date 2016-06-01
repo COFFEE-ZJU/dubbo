@@ -15,17 +15,12 @@
  */
 package com.alibaba.dubbo.common.serialize.support.json;
 
-import java.io.BufferedReader;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.lang.reflect.Type;
-
 import com.alibaba.dubbo.common.serialize.ObjectInput;
 import com.alibaba.dubbo.common.utils.PojoUtils;
 import com.alibaba.fastjson.JSON;
+
+import java.io.*;
+import java.lang.reflect.Type;
 
 /**
  * JsonObjectInput

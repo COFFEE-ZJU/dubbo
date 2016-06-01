@@ -15,10 +15,11 @@
  */
 package com.alibaba.dubbo.demo.consumer;
 
+import com.alibaba.dubbo.demo.DemoService;
+import com.alibaba.dubbo.rpc.RpcContext;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import com.alibaba.dubbo.demo.DemoService;
 
 public class DemoAction {
     
@@ -31,7 +32,10 @@ public class DemoAction {
 	public void start() throws Exception {
         for (int i = 0; i < Integer.MAX_VALUE; i ++) {
             try {
+                RpcContext.getContext().setAttachment("attKey", "time" +
+                        new Date(System.currentTimeMillis()));
             	String hello = demoService.sayHello("world" + i);
+                System.out.println("retAtt: " + RpcContext.getContext().getAttachment("retAtt"));
                 System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] " + hello);
             } catch (Exception e) {
                 e.printStackTrace();

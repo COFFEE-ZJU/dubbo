@@ -474,8 +474,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (logger.isInfoEnabled()) {
                             logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                         }
+                        // 服务端获取本地的Invoker, 使用反射机制将收到的Invocation转到实际的服务实现上
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
 
+                        // 将生成的本地Invoker通过指定的protocal暴露出去
                         Exporter<?> exporter = protocol.export(invoker);
                         exporters.add(exporter);
                     }
